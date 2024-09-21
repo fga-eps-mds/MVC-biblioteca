@@ -1,9 +1,5 @@
-from flask import Flask, render_template, request
-
-# Inicializa a aplicação Flask
-app = Flask(__name__)
-
-# Importe seus serviços e views
+from flask import render_template, request
+from app.main import app  # Importa a instância do Flask
 from app.models.servico_pesquisa_livros import ServicoPesquisaLivros
 from app.views.pagina_dados_livro import PaginaDadosLivro
 
@@ -22,7 +18,3 @@ def pesquisa():
     if livro:
         return pagina.exibe_livro(livro.titulo, livro.autor, livro.isbn)
     return "Livro não encontrado", 404
-
-# Se você estiver rodando o script diretamente, pode adicionar isso:
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
