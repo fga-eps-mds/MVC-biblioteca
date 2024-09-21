@@ -14,12 +14,17 @@ Este projeto é uma implementação do padrão MVC (Model-View-Controller) usand
    ```bash
    git clone <URL do repositório>
    ```
+
+2. **Vá para a pasta do projeto:**
+   ```bash
+   cd MVC-biblioteca
+   ```
   
-2. **Rodar o Docker:** Certifique-se de que o Docker está instalado e em execução. Use o seguinte comando para iniciar os serviços definidos no docker-compose.yml:
+3. **Rodar o Docker:** Certifique-se de que o Docker está instalado e em execução. Use o seguinte comando para iniciar os serviços definidos no docker-compose.yml:
    ```bash
     docker-compose up --build
    ```
-3. **Acessar a aplicação:** Após iniciar os serviços, abra o navegador e acesse: http://localhost:5000
+4. **Acessar a aplicação:** Após iniciar os serviços, abra o navegador e acesse: http://localhost:5000
 
 ## Funcionamento
 - O usuário acessa a página inicial, onde pode realizar pesquisas de livros.
