@@ -1,18 +1,85 @@
+<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
-  </head>
-  
-  <body>
+    <title>Pesquisa de Livros - MVC</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
     
-  <h1> Biblioteca MVC </h1> 
+      * {
+        margin: 0px;
+        padding: 0px;
+        box-sizing: border-box;
+
+        font-family: "Inria Sans", sans-serif;
+        font-weight: 300;
+        font-style: normal;
+      }
+
+      h1{
+        font-weight: 600;
+      }
+
+      h2{
+        margin: 15px;
+      }
+
+      .top-container{
+        padding: 20px;
+        width: 100%;
+        background-color: blueviolet;
+        height: 110px;
+        border-radius: 0px 0px 25px 25px;
+        color: white;
+        box-shadow: 10px 5px 5px rgb(200, 200, 200);;
+      }
+
+      .page-container {
+        margin-top: 100px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .forms{
+        height: 60px;
+        display: flex;
+        flex-direction: column;
+        
+        margin: 10px;
+      }
+
+      .textfield{
+        width: 250px;
+        height: 25px;
+        padding: 5px;
+      }
+
+      .button{
+        margin-top: 10px;
+        width: 110px;
+      }
+    </style>
+</head>
   
-  <h2> Pesquisa de Livros </h2> 
-  
-  <p> Informe o nome do autor</p>
-  <form action="/pesquisa" method="GET">
-    <input name="autor" autofocus>
-    <input type="submit" value="Pesquisar">
-  </form>
-  
-  <p> Nomes válidos: valente, fowler e gof </p>
-  </body>
+<body>
+  <div class="top-container">
+    <h1> Biblioteca MVC </h1>
+    <p>Uma aplicação para aprendizado da arquitetura de software no padrão MVC</p> 
+  </div>
+
+  <div class="page-container">
+    
+    <h2> Pesquisa de Livros </h2> 
+    
+    <p> Informe o nome do autor</p>
+
+    <form class="page-container forms" action="/pesquisa" method="GET">
+      <input class="textfield" name="autor" autofocus placeholder="Digite o nome de um autor">
+      <input class="button" type="submit" value="Pesquisar">
+    </form>
+    
+    <p>Nomes válidos: valente, fowler e gof</p>
+  </div>
+</body>
