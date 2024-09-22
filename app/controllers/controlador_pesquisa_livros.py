@@ -1,3 +1,7 @@
+# Material traduzido e adaptado de:
+# Marco Tulio Valente. Engenharia de Software Moderna: Princípios e Práticas para Desenvolvimento de Software com Produtividade,     Editora: Independente, 2020.
+# UnB-FGA-EPS-MDS
+
 from flask import render_template, request
 from app.main import app  # Importa a instância do Flask
 from app.models.servico_pesquisa_livros import ServicoPesquisaLivros
