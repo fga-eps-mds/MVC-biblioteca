@@ -101,7 +101,7 @@ O Modelo retorna os dados para a Controladora, que, então, usa a Visão para ex
 Contribuições
 Contribuições são bem-vindas! Sinta-se à vontade para abrir um issue ou enviar um pull request.
 
-###Vantagens
+### Vantagens
 Dentre as vantagens de arquiteturas MVC, podemos citar:
 
 - MVC favorece a especialização do trabalho de desenvolvimento: pode-se ter desenvolvedores especialistas na implementação de interfaces gráficas ao mesmo tempo que desenvolvedores de classes de Modelo não precisam conhecer e implementar código de interface;
