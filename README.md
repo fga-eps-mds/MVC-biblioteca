@@ -26,6 +26,11 @@ Este projeto é uma implementação do padrão MVC (Model-View-Controller) usand
    ```
 4. **Acessar a aplicação:** Após iniciar os serviços, abra o navegador e acesse: http://localhost:5000
 
+## Como executar os testes
+Execute o seguinte comando a partir do diretório raiz (MVC-biblioteca):
+> python3 -m unittest app.testes.ARQUIVO_QUE_DESEJA_EXECUTAR
+
+
 ## Funcionamento
 - O usuário acessa a página inicial, onde pode realizar pesquisas de livros.
 - A pesquisa é processada pelo controlador, que interage com o modelo para buscar os dados no banco de dados.

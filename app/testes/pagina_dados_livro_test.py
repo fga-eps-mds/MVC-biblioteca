@@ -1,5 +1,5 @@
 import unittest
-from pagina_dados_livro import PaginaDadosLivro
+from ..views.pagina_dados_livro import PaginaDadosLivro
 
 class TestPaginaDadosLivro(unittest.TestCase):
 
