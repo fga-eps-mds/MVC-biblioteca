@@ -28,8 +28,9 @@ Este projeto é uma implementação do padrão MVC (Model-View-Controller) usand
 
 ## Como executar os testes
 Execute o seguinte comando a partir do diretório raiz (MVC-biblioteca):
-> python3 -m unittest app.testes.ARQUIVO_QUE_DESEJA_EXECUTAR
-
+```
+python3 -m unittest app.testes.ARQUIVO_QUE_DESEJA_EXECUTAR
+```
 
 ## Funcionamento
 - O usuário acessa a página inicial, onde pode realizar pesquisas de livros.
@@ -38,7 +39,11 @@ Execute o seguinte comando a partir do diretório raiz (MVC-biblioteca):
 - Os livros disponíveis para pesquisa são limitados conforme o script de inicialização do banco de dados (init.sql).
 
 ## Explicação da Arquitetura MVC
+### Conceitos
 O padrão MVC separa as responsabilidades da aplicação em três componentes principais:
+![DIAGRAMA ARQUITETURA MVC](https://engsoftmoderna.info/figs/cap7/mvc.svg)
+
+Fonte: Marco Tulio Valente. Engenharia de Software Moderna: Princípios e Práticas para Desenvolvimento de Software com Produtividade,     Editora: Independente, 2020.
 
 1. Visão (View)
 A Visão é responsável pela apresentação da interface gráfica ao usuário. Ela inclui elementos visuais como formulários, janelas, botões e menus. As classes de visão não possuem lógica de negócios, focando apenas em como os dados são exibidos.
@@ -96,8 +101,14 @@ O Modelo retorna os dados para a Controladora, que, então, usa a Visão para ex
 Contribuições
 Contribuições são bem-vindas! Sinta-se à vontade para abrir um issue ou enviar um pull request.
 
+###Vantagens
+Dentre as vantagens de arquiteturas MVC, podemos citar:
 
+- MVC favorece a especialização do trabalho de desenvolvimento: pode-se ter desenvolvedores especialistas na implementação de interfaces gráficas ao mesmo tempo que desenvolvedores de classes de Modelo não precisam conhecer e implementar código de interface;
+- MVC favorece testabilidade: é mais fácil testar objetos não-visuais - não relacionados com a implementação de interfaces gráficas. Por isso, ao separar objetos de apresentação de objetos de Modelo, fica mais fácil testar esses últimos.
+- MVC permite que classes de Modelo sejam usadas por diferentes Visões:
 
+![EXEMPLO DE MAIS DE UM USO NA VIEW](https://engsoftmoderna.info/figs/cap7/clock.png))
 
 
 

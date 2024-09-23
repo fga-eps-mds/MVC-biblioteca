@@ -3,7 +3,7 @@
 # UnB-FGA-EPS-MDS
 
 from flask import render_template, request
-from app.main import app  # Importa a instância do Flask
+from app.main import app
 from app.models.servico_pesquisa_livros import ServicoPesquisaLivros
 from app.views.pagina_dados_livro import PaginaDadosLivro
 
