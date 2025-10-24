@@ -6,6 +6,7 @@ class LivroDAO:
         self.conexao = conexao
 
     def pesquisar_por_autor(self, autor):
+        global cursor
         try:
             cursor = self.conexao.cursor()
             cursor.execute("SELECT isbn, autor, titulo FROM livros WHERE LOWER(autor) LIKE %s", (f"%{autor.lower()}%",))
