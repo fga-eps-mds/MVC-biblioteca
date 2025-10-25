@@ -1,0 +1,24 @@
+[run]
+branch = True
+# Diretórios e arquivos a serem ignorados no cálculo da cobertura
+omit =
+    tests/*
+    */migrations/*
+    */__init__.py
+    */config/*
+    */settings/*
+
+[report]
+# Mostrar linhas não cobertas
+show_missing = True
+skip_covered = True
+exclude_lines =
+    # Ignorar linhas que não devem ser cobertas
+    pragma: no cover
+    if __name__ == .__main__.
+    def __repr__
+    def __str__
+    raise NotImplementedError
+
+[html]
+directory = coverage_html_report
