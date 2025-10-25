@@ -2,19 +2,8 @@ import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
-
 class BibliotecaMVCHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        '''if self.path.startswith("/pesquisa"):
-            query = parse_qs(urlparse(self.path).query)
-            autor = query.get("autor", [""])[0]
-            from controller.livro_controller import listar_livro
-            html = listar_livro(autor)
-            self.respond(html)
-        elif self.path == '/' or self.path == '/index':
-            self.render_template('index.html')
-        else:
-            self.send_error(404, 'Página não encontrada')'''
         parsed_path = urlparse(self.path)
         path = parsed_path.path
 

@@ -4,18 +4,14 @@
 
 from app.dao.db_connection import conectar
 from app.dao.livro_dao import LivroDAO
+from app.view.pagina_dados_livro import PaginaDadosLivro
+
 
 def listar_livro(autor):
     conn = conectar()
     dao = LivroDAO(conn)
-    livros = dao.pesquisar_por_autor(autor)
+    livro_pesquisado = dao.pesquisar_por_autor(autor)
     conn.close()
-    html = '<h4>Dados do Livro Pesquisado</h4><ul>'
-    if livros:
-        for livro in livros:
-            html += (f'<li>Título: {livro.titulo}</li>'
-                     f'</li>Autor: {livro.autor}</li>'
-                     f'</li>ISBN: {livro.isbn}</li>')
-        html += '</ul>'
-        return html
+    if livro_pesquisado:
+        return PaginaDadosLivro.exibe_livro(livro_pesquisado[0].titulo, livro_pesquisado[0].autor, livro_pesquisado[0].isbn)
     return "Livro não encontrado", 404
