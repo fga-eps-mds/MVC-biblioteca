@@ -2,8 +2,8 @@
 # Marco Tulio Valente. Engenharia de Software Moderna: Princípios e Práticas para Desenvolvimento de Software com Produtividade, Editora: Independente, 2020.
 # UnB-FGA-EPS-MDS
 
-from dao.db_connection import conectar
-from dao.livro_dao import LivroDAO
+from app.dao.db_connection import conectar
+from app.dao.livro_dao import LivroDAO
 
 def listar_livro(autor):
     conn = conectar()

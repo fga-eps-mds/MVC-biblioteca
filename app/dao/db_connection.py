@@ -6,5 +6,5 @@ def conectar():
         user='postgres',
         password='Y2k_0!#4',
         host='localhost',
-        port='5432'
+        port='5434'
     )
