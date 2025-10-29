@@ -5,7 +5,7 @@ import sys
 import pytest
 from mockito import mock, when, verify, ANY
 
-import app.main as sut
+import main as sut
 
 
 def make_handler():

@@ -8,10 +8,10 @@ from app.view.pagina_dados_livro import PaginaDadosLivro
 
 
 def listar_livro(autor):
-    conn = conectar()
-    dao = LivroDAO(conn)
+    conexao = conectar()
+    dao = LivroDAO(conexao)
     livro_pesquisado = dao.pesquisar_por_autor(autor)
-    conn.close()
+    conexao.close()
     if livro_pesquisado:
         return PaginaDadosLivro.exibe_livro(livro_pesquisado[0].titulo, livro_pesquisado[0].autor, livro_pesquisado[0].isbn)
     return "Livro não encontrado", 404
