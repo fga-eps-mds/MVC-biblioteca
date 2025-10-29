@@ -3,19 +3,6 @@ import os
 import psycopg2
 
 def conectar():
-    '''
-    return psycopg2.connect(
-        dbname='mvc_biblioteca_db',
-        user='postgres',
-        password='postgres',
-        host='localhost',
-        port='5432'
-    )
-    db_url = os.getenv("DATABASE_URL")
-    return psycopg2.connect(db_url)'''
-
-
-def conectar():
     try:
         conn = psycopg2.connect(
             host=os.getenv("DB_HOST", "db"),          # <— serviço do Compose
