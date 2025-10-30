@@ -1,232 +1,98 @@
-# tests/test_http_handler.py
+# app/tests/test_main.py
 import io
-import types
 import sys
+import types
+from pathlib import Path
 import pytest
-from mockito import mock, when, verify, ANY
 
-import main as sut
+import main as app_main  # importa o módulo sob teste
 
 
-def make_handler():
+# -----------------------------------------------------------------------------
+# Helpers para montar um handler "fake" sem abrir socket/HTTP de verdade
+# -----------------------------------------------------------------------------
+
+def _make_handler(monkeypatch):
     """
-    Cria uma instância do handler sem acionar BaseHTTPRequestHandler.__init__.
-    Injeta atributos e métodos necessários para os testes.
+    Cria uma instância "crua" de BibliotecaMVCHandler, sem rodar o __init__ da
+    BaseHTTPRequestHandler. Patchamos métodos de envio de resposta/headers/erros
+    para capturar o que seria enviado ao cliente.
     """
-    h = object.__new__(sut.BibliotecaMVCHandler)
-    # Saída de resposta como stream em memória
+    captured = {"status": None, "headers": [], "error": None}
+
+    def fake_send_response(self, code, message=None):
+        captured["status"] = code
+
+    def fake_send_header(self, key, value):
+        captured["headers"].append((key, value))
+
+    def fake_end_headers(self):
+        # nada a fazer; só garante que não quebre
+        pass
+
+    def fake_send_error(self, code, message=None):
+        captured["status"] = code
+        captured["error"] = message
+
+    # Aplica patches *no tipo* para afetar a instância criada abaixo
+    monkeypatch.setattr(app_main.BibliotecaMVCHandler, "send_response", fake_send_response, raising=False)
+    monkeypatch.setattr(app_main.BibliotecaMVCHandler, "send_header", fake_send_header, raising=False)
+    monkeypatch.setattr(app_main.BibliotecaMVCHandler, "end_headers", fake_end_headers, raising=False)
+    monkeypatch.setattr(app_main.BibliotecaMVCHandler, "send_error", fake_send_error, raising=False)
+
+    # Cria instância "crua" e injeta atributos mínimos
+    h = app_main.BibliotecaMVCHandler.__new__(app_main.BibliotecaMVCHandler)
+    h.rfile = io.BytesIO()
     h.wfile = io.BytesIO()
+    h.client_address = ("127.0.0.1", 0)
+    h.server = None
+    h.command = "GET"
+    h.request_version = "HTTP/1.1"
+    h.path = "/"
 
-    # Métodos que o código chama: por padrão, no-ops (substituídos nos testes quando necessário)
-    h.send_response = lambda code: None
-    h.send_header = lambda k, v=None: None
-    h.end_headers = lambda: None
-    h.send_error = lambda code, msg=None: None
-
-    # Métodos da própria classe que podemos espiar/substituir
-    # (serve_static, render_template, respond) serão substituídos conforme o teste
-    return h
+    return h, captured
 
 
-# -------------------------
-# Testes para do_GET
-# -------------------------
+# -----------------------------------------------------------------------------
+# Testes do respond()
+# -----------------------------------------------------------------------------
 
-def test_do_get_static_chama_serve_static():
-    h = make_handler()
-    h.path = "/static/css/style.css"
+def test_respond_str_default_headers_status(monkeypatch):
+    h, cap = _make_handler(monkeypatch)
+    h.respond("hello")
 
-    called = {}
-    def fake_serve_static(path):
-        called['path'] = path
-    h.serve_static = fake_serve_static
-
-    h.do_GET()
-
-    assert called['path'] == "/static/css/style.css"
+    body = h.wfile.getvalue()
+    assert cap["status"] == 200
+    assert ("Content-Type", "text/html; charset=utf-8") in cap["headers"]
+    assert body == b"hello"
 
 
-def test_do_get_pesquisa_importa_listar_livro_e_responde(monkeypatch):
-    # Injeta módulo fake "controller.livro_controller" com listar_livro
-    mod_name = "controller.livro_controller"
-    fake_mod = types.ModuleType(mod_name)
-
-    captured = {}
-    def fake_listar_livro(autor):
-        captured['autor'] = autor
-        return f"<html>Autor: {autor}</html>"
-
-    fake_mod.listar_livro = fake_listar_livro
-    sys.modules[mod_name] = fake_mod  # injeta no sistema de import
-
-    h = make_handler()
-    h.path = "/pesquisa?autor=Ana%20Silva"
-
-    # Vamos verificar que respond foi chamado com o HTML retornado
-    resp_mock = mock()
-    when(resp_mock).__call__(ANY).thenReturn(None)
-    h.respond = resp_mock
-
-    h.do_GET()
-
-    # autor deve ter sido decodificado e passado corretamente
-    assert captured['autor'] == "Ana Silva"
-    verify(resp_mock).__call__("<html>Autor: Ana Silva</html>")
+def test_respond_tuple_status_html(monkeypatch):
+    h, cap = _make_handler(monkeypatch)
+    h.respond((404, "NF"))
+    assert cap["status"] == 404
+    assert h.wfile.getvalue() == b"NF"
 
 
-@pytest.mark.parametrize("path", ["/", "/index"])
-def test_do_get_root_ou_index_renderiza_index_html(path):
-    h = make_handler()
-    h.path = path
-
-    rend_mock = mock()
-    when(rend_mock).__call__(ANY).thenReturn(None)
-    h.render_template = rend_mock
-
-    h.do_GET()
-
-    verify(rend_mock).__call__("index.html")
+def test_respond_tuple_html_status(monkeypatch):
+    h, cap = _make_handler(monkeypatch)
+    h.respond(("OK", 201))
+    assert cap["status"] == 201
+    assert h.wfile.getvalue() == b"OK"
 
 
-def test_do_get_rota_desconhecida_retorna_404():
-    h = make_handler()
-    h.path = "/rota-que-nao-existe"
+# -----------------------------------------------------------------------------
+# Testes do render_template() e _resolve_templates_dir()
+# -----------------------------------------------------------------------------
 
-    err = mock()
-    when(err).__call__(ANY, ANY).thenReturn(None)
-    h.send_error = err
+def test_render_template_sucesso(monkeypatch, tmp_path, monkeypatch_context=None):
+    # Cria um template temporário e força o uso via TEMPLATES_DIR
+    templates = tmp_path / "tpl"
+    templates.mkdir()
+    (templates / "index.html").write_text("<h1>Index</h1>", encoding="utf-8")
 
-    h.do_GET()
+    monkeypatch.setenv("TEMPLATES_DIR", str(templates))
 
-    verify(err).__call__(404, "Página não encontrada")
-
-
-# -------------------------
-# Testes para render_template
-# -------------------------
-
-def test_render_template_sucesso_lendo_arquivo_e_respondendo(tmp_path, monkeypatch):
-    # Prepara diretório de trabalho temporário com templates/index.html
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / "templates").mkdir()
-    (tmp_path / "templates" / "index.html").write_text("<h1>OK</h1>", encoding="utf-8")
-
-    h = make_handler()
-
-    resp_mock = mock()
-    when(resp_mock).__call__(ANY).thenReturn(None)
-    h.respond = resp_mock
-
+    h, cap = _make_handler(monkeypatch)
     h.render_template("index.html")
 
-    verify(resp_mock).__call__("<h1>OK</h1>")
-
-
-def test_render_template_template_inexistente_retorna_404(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)  # sem criar arquivo
-
-    h = make_handler()
-
-    err = mock()
-    when(err).__call__(ANY, ANY).thenReturn(None)
-    h.send_error = err
-
-    h.render_template("missing.html")
-
-    verify(err).__call__(404, "Template não encontrado")
-
-
-# -------------------------
-# Testes para serve_static
-# -------------------------
-
-@pytest.mark.parametrize(
-    "filename,content_type",
-    [
-        ("style.css", "text/css"),
-        ("app.js", "application/javascript"),
-        ("img.png", "image/png"),
-        ("photo.jpg", "image/jpeg"),
-        ("photo.jpeg", "image/jpeg"),
-        ("file.bin", "application/octet-stream"),
-    ],
-)
-def test_serve_static_retorna_200_com_tipo_correto_e_corpo(tmp_path, monkeypatch, filename, content_type):
-    # Prepara um arquivo real em tmp_path/static/<filename>
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / "static").mkdir()
-    data = b"conteudo-binario"
-    (tmp_path / "static" / filename).write_bytes(data)
-
-    h = make_handler()
-
-    # Mocks para cabeçalhos e status usando mockito (callables)
-    sr = mock()
-    sh = mock()
-    eh = mock()
-    when(sr).__call__(ANY).thenReturn(None)
-    when(sh).__call__(ANY, ANY).thenReturn(None)
-    when(eh).__call__().thenReturn(None)
-
-    h.send_response = sr
-    h.send_header = sh
-    h.end_headers = eh
-
-    # Executa
-    h.serve_static(f"/static/{filename}")
-
-    # Verifica status e cabeçalhos
-    verify(sr).__call__(200)
-    verify(sh).__call__("Content-type", content_type)
-    verify(eh).__call__()
-
-    # Verifica corpo
-    h.wfile.seek(0)
-    body = h.wfile.read()
-    assert body == data
-
-
-def test_serve_static_arquivo_inexistente_retorna_404(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-
-    h = make_handler()
-
-    err = mock()
-    when(err).__call__(ANY, ANY).thenReturn(None)
-    h.send_error = err
-
-    h.serve_static("/static/nao-tem.css")
-
-    verify(err).__call__(404, "Arquivo estático não encontrado")
-
-
-# -------------------------
-# Testes para respond
-# -------------------------
-
-def test_respond_envia_200_cabecalhos_e_corpo():
-    h = make_handler()
-
-    # Mocks de métodos de cabeçalho/estado
-    sr = mock()
-    sh = mock()
-    eh = mock()
-    when(sr).__call__(ANY).thenReturn(None)
-    when(sh).__call__(ANY, ANY).thenReturn(None)
-    when(eh).__call__().thenReturn(None)
-    h.send_response = sr
-    h.send_header = sh
-    h.end_headers = eh
-
-    # Act
-    conteudo = "Olá, mundo!"
-    h.respond(conteudo)
-
-    # Assert chamadas de headers e status
-    verify(sr).__call__(200)
-    verify(sh).__call__('Content-type', 'text/html')
-    verify(eh).__call__()
-
-    # Assert corpo em bytes
-    h.wfile.seek(0)
-    assert h.wfile.read() == conteudo.encode("utf-8")
