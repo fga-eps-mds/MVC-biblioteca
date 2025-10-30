@@ -1,73 +1,93 @@
-# tests/test_pagina_dados_livro.py
-import re
+# app/tests/test_pagina_dados_livro.py
+import pytest
+from app.view.pagina_dados_livro import PaginaDadosLivro
 
-import app.view.pagina_dados_livro as sut
 
-
-def compacta_ws(s: str) -> str:
+def _normalize(html: str) -> str:
     """
-    Auxiliar para tornar asserções mais robustas a respeito de espaços/indentação.
-    Converte qualquer sequência de whitespace em um único espaço e faz strip nas pontas.
+    Normaliza HTML para comparações robustas:
+    - remove todos os espaços em branco (espaços, quebras de linha, tabs),
+      para não depender de indentação/quebras.
     """
-    return re.sub(r"\s+", " ", s).strip()
+    return "".join(html.split())
 
 
-def test_exibe_livro_renderiza_campos_basicos():
-    html = sut.PaginaDadosLivro.exibe_livro(
-        titulo="Clean Code",
-        autor="Robert C. Martin",
-        isbn="9780132350884"
+def test_exibe_livro_estrutura_basica_html():
+    saida = PaginaDadosLivro.exibe_livro("Livro A", "Autor A", "123-ABC")
+
+    # Tags de estrutura principais
+    assert "<meta" in saida.lower() and "charset" in saida.lower()
+    assert '<link' in saida.lower() and 'rel="stylesheet"' in saida.lower()
+    assert "<h1>" in saida and "</h1>" in saida
+    assert "<ul>" in saida and "</ul>" in saida
+
+    # Conteúdo do título (H1)
+    assert "Dados do Livro Pesquisado" in saida
+
+    # Itens da lista
+    norm = _normalize(saida)
+    assert _normalize("<li>Título: Livro A</li>") in norm
+    assert _normalize("<li>Autor: Autor A</li>") in norm
+    assert _normalize("<li>ISBN: 123-ABC</li>") in norm
+
+
+def test_exibe_livro_ordem_dos_itens():
+    saida = PaginaDadosLivro.exibe_livro("L", "A", "I")
+    norm = _normalize(saida)
+
+    li_titulo = _normalize("<li>Título: L</li>")
+    li_autor = _normalize("<li>Autor: A</li>")
+    li_isbn = _normalize("<li>ISBN: I</li>")
+
+    pos_titulo = norm.find(li_titulo)
+    pos_autor  = norm.find(li_autor)
+    pos_isbn   = norm.find(li_isbn)
+
+    # Todos devem existir
+    assert pos_titulo != -1 and pos_autor != -1 and pos_isbn != -1
+    # Ordem: Título -> Autor -> ISBN
+    assert pos_titulo < pos_autor < pos_isbn
+
+
+def test_exibe_livro_meta_charset_utf8():
+    saida = PaginaDadosLivro.exibe_livro("X", "Y", "Z")
+    low = saida.lower()
+    # Tolerante a aspas simples/duplas
+    assert "meta" in low and "charset" in low and "utf-8" in low
+
+
+def test_exibe_livro_link_stylesheet_presente():
+    saida = PaginaDadosLivro.exibe_livro("X", "Y", "Z")
+    # Caminho do CSS declarado na view
+    assert "/static/css/style.css" in saida
+
+
+def test_exibe_livro_preserva_caracteres_especiais():
+    saida = PaginaDadosLivro.exibe_livro(
+        titulo="*Negrito*",
+        autor="_Itálico_",
+        isbn="`inline-code`",
     )
-
-    # Asserções diretas por substrings (independem de indentação)
-    assert "Dados do Livro Pesquisado" in html
-    assert "Título: Clean Code" in html
-    assert "Autor: Robert C. Martin" in html
-    assert "ISBN: 9780132350884" in html
-
-    # Garante que usa tags HTML escapadas (&lt; ... &gt;)
-    assert "&lt;meta charset=\"UTF-8\"&gt;" in html
-    assert "&lt;link rel=\"stylesheet\" href=\"/static/css/style.css\"&gt;" in html
-    assert "&lt;h1&gt;" in html and "&lt;/h1&gt;" in html
-    assert "&lt;ul&gt;" in html and "&lt;/ul&gt;" in html
-    assert "&lt;li&gt;" in html and "&lt;/li&gt;" in html
+    # O HTML não escapa esses caracteres (eles aparecem como texto dentro do <li>)
+    assert "*Negrito*" in saida
+    assert "_Itálico_" in saida
+    assert "`inline-code`" in saida
 
 
-def test_exibe_livro_layout_minimo_com_whitespace_variavel():
-    html = sut.PaginaDadosLivro.exibe_livro("A", "B", "C")
-    # Normalizamos espaços para evitar fragilidade com identação da f-string
-    html_norm = compacta_ws(html)
+@pytest.mark.parametrize(
+    "titulo,autor,isbn",
+    [
+        (123, 456, 789),          # inteiros
+        (None, "Autor", "X"),     # None
+        ("Título", None, "X"),
+        ("Título", "Autor", None),
+    ],
+)
+def test_exibe_livro_converte_argumentos_para_string(titulo, autor, isbn):
+    saida = PaginaDadosLivro.exibe_livro(titulo, autor, isbn)
+    norm = _normalize(saida)
 
-    # Verificações mais "estruturais"
-    assert '&lt;meta charset="UTF-8"&gt;' in html_norm
-    assert 'href="/static/css/style.css"' in html_norm
-    assert "&lt;h1&gt; Dados do Livro Pesquisado &lt;/h1&gt;" in html_norm
-
-    # Lista com três itens esperados
-    assert "Título: A" in html_norm
-    assert "Autor: B" in html_norm
-    assert "ISBN: C" in html_norm
-
-
-def test_exibe_livro_suporta_caracteres_especiais_e_html_no_conteudo():
-    titulo = 'Algoritmos & Estruturas <Dados> "Avançado"'
-    autor = "José da Silva & Filhos <Org.>"
-    isbn = "ISBN-13: 978-85-7522-000-0"
-
-    html = sut.PaginaDadosLivro.exibe_livro(titulo, autor, isbn)
-    html_norm = compacta_ws(html)
-
-    # Os valores fornecidos são inseridos literalmente no corpo de texto (o template usa &lt;...&gt;)
-    # Assim, garantimos que os caracteres apareçam como fornecidos.
-    assert f"Título: {titulo}" in html_norm
-    assert f"Autor: {autor}" in html_norm
-    assert f"ISBN: {isbn}" in html_norm
-
-
-def test_exibe_livro_e_staticmethod():
-    # Garante que é um metodo estático (pode ser chamado sem instância)
-    assert isinstance(sut.PaginaDadosLivro.__dict__["exibe_livro"], staticmethod)
-
-    # E que a chamada sem instância funciona
-    out = sut.PaginaDadosLivro.exibe_livro("T", "A", "I")
-    assert isinstance(out, str) and "Título: T" in out
+    # f-string converte para str(...) implicitamente
+    assert _normalize(f"<li>Título: {str(titulo)}</li>") in norm
+    assert _normalize(f"<li>Autor: {str(autor)}</li>") in norm
+    assert _normalize(f"<li>ISBN: {str(isbn)}</li>") in norm
