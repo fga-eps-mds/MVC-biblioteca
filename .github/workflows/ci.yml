@@ -1,0 +1,35 @@
+name: ci.yml
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  roda-testes-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          pip install -r requirements.txt
+
+      # Passo 1: apenas erros críticos -> falha o job se houver
+      - name: Flake8 (erros críticos)
+        run: |
+          # E9: syntax errors; F63/F7/F82: problemas de pyflakes/undefined name/arg
+          flake8 --select=E9,F63,F7,F82 .
+
+      # Passo 2: estilo/comentários -> não bloqueia
+      - name: Flake8 (estilo - não bloqueador)
+        run: flake8 --ignore=E9,F63,F7,F82 .
+        continue-on-error: true
+
+      - name: Testes (pytest)
+        run: pytest -q --maxfail=1 --disable-warnings
