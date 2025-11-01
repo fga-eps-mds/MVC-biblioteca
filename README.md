@@ -12,6 +12,7 @@ desenvolvido para servir como exemplo didático para uma aplicação de pesquisa
 - PostgreSQL
 - Docker
 
+
 ## Como Rodar o Projeto
 
 1. **Clone o repositório:**
