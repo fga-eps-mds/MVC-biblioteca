@@ -1,5 +1,10 @@
 # Projeto MVC em Python 
-Este projeto é uma implementação do padrão MVC (Model-View-Controller) usando Python, Flask e PostgreSQL. Ele foi desenvolvido para servir como exemplo didático para uma aplicação de pesquisa de livros já feita em [Java](https://replit.com/@engsoftmoderna/ExemploArquiteturaMVC#templates/index.html)
+Este projeto é uma implementação dos padrões MVC (Model-View-Controller) e DAO (Data Access Object)  usando Python e PostgreSQL. Ele foi 
+desenvolvido para servir como exemplo didático para uma aplicação de pesquisa de livros, originalmente escrita em Java.
+
+### Referência:
+- Marco Tulio Valente. Engenharia de Software Moderna: Princípios e Práticas para Desenvolvimento de Software com Produtividade, Editora: Independente, 2020.
+- [Projeto Java Original](https://replit.com/@engsoftmoderna/ExemploArquiteturaMVC#templates/index.html)
 
 ## Requisitos
 
